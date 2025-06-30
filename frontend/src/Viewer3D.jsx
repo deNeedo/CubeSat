@@ -1,23 +1,60 @@
 import {useRef, useEffect} from "react";
-import {Canvas} from "@react-three/fiber";
+import {Canvas, useFrame} from "@react-three/fiber";
 import {OrbitControls, Stars} from "@react-three/drei";
 import {useLoader} from '@react-three/fiber';
-import {TextureLoader, EdgesGeometry, LineSegments, LineBasicMaterial} from 'three';
+import {TextureLoader, EdgesGeometry, LineSegments, LineBasicMaterial, Vector3, ArrowHelper} from 'three';
 import earthTexture from './assets/earth.jpg';
 
-const SCALE = 8 / 6371 // size of Earth in three.js / Earth radius
+const SUN_RADIUS = 695508 
+const EARTH_RADIUS = 6371
+const EARTH_BASE_RADIUS = 50
+const SATELLITE_SIDE = 100
+const SCALE = 10 / EARTH_RADIUS
+const ARROW_SCALE = 0.5;
 
-function Earth() {
-	const texture = useLoader(TextureLoader, earthTexture);
+function Sun({position}) {
+	const positionX = SCALE * position[1];
+	const positionY = SCALE * position[2];
+	const positionZ = SCALE * position[0];
 	return (
-		<mesh position={[0, 0, 0]} rotation={[0, Math.PI/2, 0]}> // no idea why this rotation but it works (more less)
-			<sphereGeometry args={[8, 64, 64]} />
-			<meshStandardMaterial map={texture} />
-		</mesh>
+		<>
+			<mesh position={[positionX, positionY, positionZ]}>
+				<sphereGeometry args={[SUN_RADIUS * SCALE, 64, 64]} />
+				<meshStandardMaterial color="yellow" emissive="yellow" emissiveIntensity={10} toneMapped={false} />
+			</mesh>
+			<directionalLight position={[positionX, positionY, positionZ]} intensity={1.5} color="white" castShadow />
+		</>
 	);
 }
 
-function Satellite({position}) {
+function Earth({simulationSpeed, observerPosition}) {
+	const earthRef = useRef();
+	useFrame((state, delta) => {
+		if (earthRef.current) {
+			const rotationSpeed = (2 * Math.PI) / 86164; // radians/sec
+			earthRef.current.rotation.y += delta * rotationSpeed * simulationSpeed;
+		}
+	});
+	if (observerPosition == null) return;
+	const positionX = SCALE * observerPosition[1];
+	const positionY = SCALE * observerPosition[2];
+	const positionZ = SCALE * observerPosition[0];
+	const texture = useLoader(TextureLoader, earthTexture);
+	return (
+		<group ref={earthRef}>
+			<mesh rotation={[0, Math.PI / 2.2, 0]}>
+				<sphereGeometry args={[EARTH_RADIUS * SCALE, 64, 64]} />
+				<meshStandardMaterial map={texture} />
+			</mesh>
+			<mesh position={[positionX, positionY, positionZ]}>
+				<sphereGeometry args={[EARTH_BASE_RADIUS * SCALE, 64, 64]} />
+				<meshStandardMaterial color="red" />
+			</mesh>
+		</group>
+	);
+}
+
+function Satellite({position, velocity, sun}) {
 	if (position == null) return;
 	const meshRef = useRef();
 	useEffect(() => {
@@ -27,25 +64,35 @@ function Satellite({position}) {
 		const lines = new LineSegments(edges, new LineBasicMaterial({color: "black"}));
 		meshRef.current.add(lines);
 	},)
-	const positionX = SCALE * position[1];
-	const positionY = SCALE * position[2];
-	const positionZ = SCALE * position[0];
+	const positionX = SCALE * position[1]; const positionY = SCALE * position[2]; const positionZ = SCALE * position[0];
+	const velocityX = SCALE * velocity[1]; const velocityY = SCALE * velocity[2]; const velocityZ = SCALE * velocity[0];
+	const sunX = SCALE * sun[1]; const sunY = SCALE * sun[2]; const sunZ = SCALE * sun[0];
+
+	const earthDir = new Vector3(positionX, positionY, positionZ).multiplyScalar(-1).normalize();
+	const velocityDir = new Vector3(velocityX, velocityY, velocityZ).normalize();
+	const sunDir = new Vector3(sunX, sunY, sunZ).normalize();
 	return (
-		<mesh ref={meshRef} position={[positionX, positionY, positionZ]}>
-			<boxGeometry args={[0.3, 0.3, 0.3]}/>
-			<meshStandardMaterial color="red"/>
-	  	</mesh>
+		<group position={[positionX, positionY, positionZ]}>
+			<mesh ref={meshRef}>
+				<boxGeometry args={[SATELLITE_SIDE * SCALE, SATELLITE_SIDE * SCALE, SATELLITE_SIDE * SCALE]}/>
+				<meshStandardMaterial color="red"/>
+			</mesh>
+			<primitive object={new ArrowHelper(earthDir, new Vector3(0, 0, 0), ARROW_SCALE, 0x00ffff)}/>
+			<primitive object={new ArrowHelper(velocityDir, new Vector3(0, 0, 0), ARROW_SCALE, 0xff00ff)}/>
+			<primitive object={new ArrowHelper(sunDir, new Vector3(0, 0, 0), ARROW_SCALE, 0xffff00)}/>
+		</group>
 	);
 }
 
-export default function Viewer3D({satelliteState}) {
+export default function Viewer3D({userLocation, state, speed}) {
     return (
 		<div className="w-full h-full">
 			<Canvas camera={{position: [20, 0, 0]}}>
-				<ambientLight intensity={2}/>
+				<ambientLight intensity={0.15}/>
 				<Stars/>
-				<Earth/>
-				<Satellite position={satelliteState ? satelliteState.position_eci : null}/>
+				<Sun position={state ? state.sun_eci : null} />
+				<Earth simulationSpeed={speed} observerPosition={userLocation ? userLocation : null}/>
+				<Satellite position={state ? state.position_eci : null} velocity={state ? state.velocity_eci : null} sun={state ? state.sun_eci : null}/>
 				<OrbitControls enableZoom={false} target={[0, 0, 0]}/>
 			</Canvas>
 		</div>
