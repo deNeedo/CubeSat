@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from time import sleep
@@ -6,8 +6,7 @@ from time_controller import SimulationClock
 from state import SimulationState
 from modules import orbit, sun, shadow, magnetic_field, visibility
 from pydantic import BaseModel
-from datetime import datetime, timezone
-from system_converter import geodetic_to_eci
+from system_converter import geodetic_to_eci, gmst_angle
 import requests
 
 # Global simulation state
@@ -57,6 +56,10 @@ app.add_middleware(
 
 class SpeedRequest(BaseModel):
     speed: float
+
+@app.get("/rotangle")
+def get_state():
+    return gmst_angle()
 
 @app.get("/observer-eci")
 def get_observer_eci(lat: float = Query(...), lon: float = Query(...)):

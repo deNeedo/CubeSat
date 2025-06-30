@@ -5,6 +5,7 @@ import {getState} from "./services/api";
 
 export default function App() {
 	const [state, setState] = useState(null);
+	const [rotAngle, setRotAngle] = useState(0);
 	const [speed, setSpeed] = useState(1.0);
 	const [userLocation, setUserLocation] = useState(null);
 	useEffect(() => {
@@ -33,6 +34,14 @@ export default function App() {
 		const interval = setInterval(fetchData, 500 / speed);
 		return () => clearInterval(interval);
 	}, [speed]);
+	useEffect(() => {
+		const fetchRotationAngle = async () => {
+			const res = await fetch("http://localhost:8000/rotangle")
+			const data = await res.json()
+			setRotAngle(data);
+    	};
+		fetchRotationAngle();
+	}, []);
 
 	return (
 		<div className="bg-gray-950 h-screen w-screen flex flex-row">
@@ -40,7 +49,7 @@ export default function App() {
 				<SidebarData speed={speed} setSpeed={setSpeed} state={state} />
 			</div>
 			<div className="flex-9">
-				<Viewer3D userLocation={userLocation} speed={speed} state={state} />
+				<Viewer3D rotationAngle={rotAngle} userLocation={userLocation} speed={speed} state={state} />
 			</div>
 		</div>
 	);

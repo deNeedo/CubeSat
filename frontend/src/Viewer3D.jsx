@@ -3,7 +3,8 @@ import {Canvas, useFrame} from "@react-three/fiber";
 import {OrbitControls, Stars} from "@react-three/drei";
 import {useLoader} from '@react-three/fiber';
 import {TextureLoader, EdgesGeometry, LineSegments, LineBasicMaterial, Vector3, ArrowHelper} from 'three';
-import earthTexture from './assets/earth.jpg';
+// import earthTexture from './assets/earth.jpg';
+import earthTexture from './assets/earth.png';
 
 const SUN_RADIUS = 695508 
 const EARTH_RADIUS = 6371
@@ -11,6 +12,7 @@ const EARTH_BASE_RADIUS = 50
 const SATELLITE_SIDE = 100
 const SCALE = 10 / EARTH_RADIUS
 const ARROW_SCALE = 0.5;
+const ROTATION_ANGLE = 0;
 
 function Sun({position}) {
 	const positionX = SCALE * position[1];
@@ -27,9 +29,9 @@ function Sun({position}) {
 	);
 }
 
-function Earth({simulationSpeed, observerPosition}) {
+function Earth({simulationSpeed, observerPosition, angle}) {
 	const earthRef = useRef();
-	useFrame((state, delta) => {
+	useFrame((_, delta) => {
 		if (earthRef.current) {
 			const rotationSpeed = (2 * Math.PI) / 86164; // radians/sec
 			earthRef.current.rotation.y += delta * rotationSpeed * simulationSpeed;
@@ -42,7 +44,7 @@ function Earth({simulationSpeed, observerPosition}) {
 	const texture = useLoader(TextureLoader, earthTexture);
 	return (
 		<group ref={earthRef}>
-			<mesh rotation={[0, Math.PI / 2.2, 0]}>
+			<mesh rotation={[0, angle, 0]}>
 				<sphereGeometry args={[EARTH_RADIUS * SCALE, 64, 64]} />
 				<meshStandardMaterial map={texture} />
 			</mesh>
@@ -84,16 +86,16 @@ function Satellite({position, velocity, sun}) {
 	);
 }
 
-export default function Viewer3D({userLocation, state, speed}) {
+export default function Viewer3D({rotationAngle, userLocation, state, speed}) {
     return (
 		<div className="w-full h-full">
-			<Canvas camera={{position: [20, 0, 0]}}>
+			<Canvas camera={{position: [0, 0, 20]}}>
 				<ambientLight intensity={0.15}/>
 				<Stars/>
 				<Sun position={state ? state.sun_eci : null} />
-				<Earth simulationSpeed={speed} observerPosition={userLocation ? userLocation : null}/>
+				<Earth simulationSpeed={speed} observerPosition={userLocation ? userLocation : null} angle={rotationAngle}/>
 				<Satellite position={state ? state.position_eci : null} velocity={state ? state.velocity_eci : null} sun={state ? state.sun_eci : null}/>
-				<OrbitControls enableZoom={false} target={[0, 0, 0]}/>
+				<OrbitControls enableZoom={true} target={[0, 0, 0]}/>
 			</Canvas>
 		</div>
     );
