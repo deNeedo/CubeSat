@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
-import Viewer3D from "./Viewer3D";
-import SidebarData from "./SidebarData";
-import {getState} from "./services/api";
+import Viewer3D from "./Viewer3D.jsx";
+import SidebarData from "./SidebarData.jsx";
+import {getState} from "./services/api.js";
 
 export default function App() {
 	const [state, setState] = useState(null);

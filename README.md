@@ -41,6 +41,11 @@ npm install
 ```bash
 npm run dev
 ```
+3. Here is an option for deploying the application:
+```bash
+npm run build
+serve -s dist -l tcp://IP_ADDRESS:PORT
+```
 ### Usage
 - Access the frontend in your browser at http://localhost:3000
 - The satellite visualization will load with real-time data from the backend
