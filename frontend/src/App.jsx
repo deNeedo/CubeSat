@@ -15,7 +15,7 @@ export default function App() {
 				const data = await res.json();
 				if (data.status === 'success') {
 				const {lat, lon} = data;
-					const res = await fetch(`http://localhost:8000/observer-eci?lat=${lat}&lon=${lon}`);
+					const res = await fetch(`http://10.147.17.201:8000/observer-eci?lat=${lat}&lon=${lon}`);
 					const data2 = await res.json();
 					setUserLocation(data2);
 				}
@@ -31,12 +31,13 @@ export default function App() {
 			setState(data);
     	};
 		fetchData();
-		const interval = setInterval(fetchData, 500 / speed);
+		if (speed == 0) return;
+		const interval = setInterval(fetchData, 1000 / Math.abs(speed));
 		return () => clearInterval(interval);
 	}, [speed]);
 	useEffect(() => {
 		const fetchRotationAngle = async () => {
-			const res = await fetch("http://localhost:8000/rotangle")
+			const res = await fetch("http://10.147.17.201:8000/rotangle")
 			const data = await res.json()
 			setRotAngle(data);
     	};
@@ -48,7 +49,7 @@ export default function App() {
 			<div className="flex-1 text-white p-5">
 				<SidebarData speed={speed} setSpeed={setSpeed} state={state} />
 			</div>
-			<div className="flex-9">
+			<div className="flex-7">
 				<Viewer3D rotationAngle={rotAngle} userLocation={userLocation} speed={speed} state={state} />
 			</div>
 		</div>

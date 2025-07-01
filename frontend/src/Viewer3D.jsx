@@ -3,8 +3,7 @@ import {Canvas, useFrame} from "@react-three/fiber";
 import {OrbitControls, Stars} from "@react-three/drei";
 import {useLoader} from '@react-three/fiber';
 import {TextureLoader, EdgesGeometry, LineSegments, LineBasicMaterial, Vector3, ArrowHelper} from 'three';
-// import earthTexture from './assets/earth.jpg';
-import earthTexture from './assets/earth.png';
+const earthTexture = '/assets/earth.jpg';
 
 const SUN_RADIUS = 695508 
 const EARTH_RADIUS = 6371
@@ -15,6 +14,7 @@ const ARROW_SCALE = 0.5;
 const ROTATION_ANGLE = 0;
 
 function Sun({position}) {
+	if (position == null) return;
 	const positionX = SCALE * position[1];
 	const positionY = SCALE * position[2];
 	const positionZ = SCALE * position[0];
@@ -95,7 +95,7 @@ export default function Viewer3D({rotationAngle, userLocation, state, speed}) {
 				<Sun position={state ? state.sun_eci : null} />
 				<Earth simulationSpeed={speed} observerPosition={userLocation ? userLocation : null} angle={rotationAngle}/>
 				<Satellite position={state ? state.position_eci : null} velocity={state ? state.velocity_eci : null} sun={state ? state.sun_eci : null}/>
-				<OrbitControls enableZoom={true} target={[0, 0, 0]}/>
+				<OrbitControls enableZoom={false} target={[0, 0, 0]}/>
 			</Canvas>
 		</div>
     );

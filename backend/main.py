@@ -39,17 +39,21 @@ url = "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=tle"
 #     print(f"Failed to fetch TLE data. Status code: {response.status_code}")
 
 state.name = "ISS (ZARYA)"
-line1 = "1 25544U 98067A   25181.15607184  .00004733  00000+0  89907-4 0  9992"
-line2 = "2 25544  51.6344 242.7996 0002295 311.2029  48.8762 15.50302098517179"
+line1 = "1 25544U 98067A   25181.86034722  .00005730  00000+0  10713-3 0  9998"
+line2 = "2 25544  51.6365 239.3035 0002095 317.1043  16.2145 15.50312841517279"
 
 Thread(target=simulation_loop, daemon=True).start()
 
 app = FastAPI()
 
-# Enable CORS so frontend can access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # adjust if needed
+    allow_origins=[
+        "http://localhost:3000",
+        "http://192.168.0.103:3000",
+        "http://10.147.17.201:3000", # your actual frontend IP + port
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
